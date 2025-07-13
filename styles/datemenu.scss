@@ -17,6 +17,7 @@
 /* Clock label styling */
 #popover-time {
   padding: variable.$padding;
+
   label {
     font-size: 2.8em;
     font-weight: 600;
@@ -33,7 +34,7 @@
   padding: 1em;
 }
 
-/* Calendar internal node (if matched) */
+/* Calendar internal node */
 #popover-calendar calendar {
   font-size: 1em;
   padding: variable.$padding variable.$padding 0;
@@ -68,5 +69,60 @@
 
   &:indeterminate {
     color: color.mix(theme.$text-main, transparent, 10%);
+  }
+}
+
+/* Timer elements inside date-menu */
+#date-menu {
+  .timer-title {
+    font-weight: 600;
+    color: theme.$text-main;
+    margin-top: 0.5em;
+  }
+
+  entry {
+    background-color: theme.$background-alt;
+    border-radius: variable.$radius;
+    padding: 0.3em 0.5em;
+    font-weight: bold;
+    color: theme.$text-main;
+
+    &:focus {
+      outline: none;
+      border: 1px solid theme.$primary;
+    }
+  }
+
+  label#timer-label {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: theme.$text-main;
+    /* margin-top: 0.5em; */
+  }
+}
+
+/* Timer Start Button */
+#timer-start-button {
+  margin: 0.3em 0 0 0;
+  padding: 0.25em 1em;
+  font-weight: bold;
+  border-radius: variable.$radius-large;
+  background-color: transparent;
+  color: theme.$text-main;
+  transition: background-color 120ms ease;
+  border: 1px solid theme.$primary;
+
+  &:hover {
+    background-color: theme.$surface-disabled;
+  }
+
+  &:active {
+    background-color: theme.$text-main;
+    color: theme.$background;
+  }
+
+  &:focus {
+    outline: none;
+    border: 1px solid theme.$primary;
   }
 }
