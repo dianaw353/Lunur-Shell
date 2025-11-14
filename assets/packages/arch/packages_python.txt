@@ -1,5 +1,0 @@
-python-fabric-git
-python-rlottie-python
-python-pytomlpp
-python-ijson
-python-setproctitle

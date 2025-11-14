@@ -2,57 +2,40 @@
 
 # Install Git if not present.
 echo "Checking if Git is already installed..."
-if ! command -v git > /dev/null; then
+if ! command -v git >/dev/null; then
   echo "Git was not found. Installing..."
   sudo pacman -S --noconfirm git
 else
   echo "Git is already installed!"
 fi
 
-# Install an AUR helper if there's none installed.
-echo "Checking if a supported AUR helper (yay/paru) is installed..."
-if ! command -v yay paru> /dev/null; then
-  echo "No AUR helper found. Installing yay..."
-  cd ~
-  git clone https://aur.archlinux.org/yay-bin yay-aur
-  cd yay-aur
-  sudo pacman -S --noconfirm --needed base-devel
-  makepkg -siC
-  cd -
-  echo "yay has been successfully installed!"
+# Install Python if not present.
+echo "Checking if Python is already installed..."
+if ! command -v python >/dev/null; then
+  echo "Python was not found. Installing..."
+  sudo pacman -S --noconfirm python
 else
-  echo "A supported AUR helper is already installed!"
-fi
-
-# Try to find the AUR helper installed on this system.
-echo "Setting up environment..."
-if command -v yay > /dev/null; then
-  echo "Detected helper: yay"
-  AUR_HELPER="yay"
-  echo "yay is known to use -S for AUR packages."
-  AUR_PARAM="-S"
-elif command -v paru > /dev/null; then
-  echo "Detected helper: paru"
-  AUR_HELPER="paru"
-  echo "paru is known to use -S for AUR packages."
-  AUR_PARAM="-S"
+  echo "Python is already installed!"
 fi
 
 # Find where the script is located.
 # Source: https://stackoverflow.com/a/246128
 echo "Detecting where the script is located..."
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 echo "Detected path: $SCRIPT_DIR"
+cd $SCRIPT_DIR
 
-# Install packages from official repository.
-echo "Installing requirements listed for official repositories using pacman..."
-sudo pacman -S --needed --noconfirm $(cat $SCRIPT_DIR/assets/packages/arch/packages_official.txt) $(cat $SCRIPT_DIR/assets/packages/arch/packages_python.txt | grep ijson)
+# Set up virtual environment
+echo "Setting up virtual environment..."
+python -m venv venv
+source venv/bin/activate
 
-# Install packages from AUR.
-echo "Installing requirements listed for AUR using $AUR_HELPER..."
-$AUR_HELPER $AUR_PARAM --needed --noconfirm $(cat $SCRIPT_DIR/assets/packages/arch/packages_aur.txt) $(cat $SCRIPT_DIR/assets/packages/arch/packages_python.txt | sed '/ijson/d' )
+# Install requirements
+echo "Installing requirements in the virtual environment..."
+pip install -r requirements.txt
 
-echo "Installing python requirements linsted in python using $AUR_HELPER"
-$AUR_HELPER $AUR_PARAM --needed --noconfirm $(cat $SCRIPT_DIR/assets/packages/arch/packages_python.txt) $(cat $SCRIPT_DIR/assets/packages/arch/packages_python.txt | sed '/ijson/d' ) 
+# Deactivate virtual environment
+echo "Deactivating virtual environment..."
+deactivate
 
 echo "All done!"
