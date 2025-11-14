@@ -35,29 +35,7 @@ Clone the repo:
   cd ~/.config/Lunur-Shell/
 ```
 
-### Option 1: Python Envirement
-
-#### Step 1: Install system dependencies
-
-```
-cat assets/packages/arch/packages_aur.txt assets/packages/arch/packages_official.txt | yay -S --needed -
-```
-
-#### Step 2: Set up python envirement & python packages
-
-```
-  python -m venv venv
-  source venv/bin/activate
-  pip install -r requirements.txt
-```
-
-#### Step 3: Run Lunur-Shell
-
-```
-  python main.py
-```
-
-### Option 2: Automated Installation
+### Option 1: Automated Installation
 
 #### Step 1: Run the script
 
@@ -73,7 +51,26 @@ Run the following script
   python main.py
 ```
 
-### Option 3: Manual Installation
+### Option 2: Manual Installation via Python Envirement
+
+#### Step 1: Set up python envirement & python packages
+
+```
+  python -m venv venv
+  source venv/bin/activate
+  pip install -r requirements.txt
+```
+
+#### Step 2: Run Lunur-Shell
+
+```
+  python main.py
+```
+
+### Option 3: Manual Installation via System Packages
+
+> [!WARNING]
+> This method of installation isn't encouraged as it will render the autostart in Lunur-Dots useless. You'll need to adjust autostart entries to make use of it.
 
 #### Step 1: Install Dependencies - Arch Linux
 
