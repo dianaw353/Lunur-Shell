@@ -44,7 +44,7 @@
 }
 
 @mixin slider($height: 11px,
-  $highlight-color: white,
+  $highlight-color: theme.$primary,
   $slider: false,
   $radius: variable.$radius,
   $slider-color: theme.$background-dark,
