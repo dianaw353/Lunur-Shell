@@ -12,5 +12,29 @@ $slider-height: 12px;
   background-color: theme.$background; 
   border-radius: variable.$radius;
   min-width: variable.$quicksettings-width;
-  min-height: 400px;
+  min-height: 50px;
+}
+
+.quicksettings-toggler {
+  background-color: theme.$background-alt;
+  color: theme.$text-main;
+  border-radius: variable.$radius;
+  padding: common.toEm(3) 0;
+  padding-left: common.toEm(10);
+  transition: background-color 120ms ease, color 120ms ease;
+
+  &:hover,
+  &:focus {
+    background-color: theme.$surface-highlight;
+  }
+
+  &:active {
+    background-color: color.mix(theme.$primary, theme.$surface-highlight, 15%);
+    border: 1px solid theme.$primary;
+  }
+}
+
+.quicksettings-toggler.active {
+  background-color: theme.$primary;
+  color: theme.$text-muted-light;
 }

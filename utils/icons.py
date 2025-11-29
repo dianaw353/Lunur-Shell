@@ -39,6 +39,27 @@ text_icons = {
         "medium": "",
         "high": "",  # highest brightness
     },
+    "notification": {
+        "noisy": "󰂜",
+        "full": "󰅸",
+        "silent": "󰪑",
+        "checked": "󱇥",
+    },
+    "wifi": {
+        "off": "󰤭",  # WiFi disabled
+        "disconnected": "󰤯",  # WiFi enabled but not connected
+        "none": "󰤯",  # Very weak signal (0-20%)
+        "weak": "󰤟",  # Weak signal (20-40%)
+        "fair": "󰤢",  # Fair signal (40-60%)
+        "good": "󰤥",  # Good signal (60-80%)
+        "excellent": "󰤨",  # Excellent signal (80-100%)
+    },
+    "bluetooth": {
+        "off": "󰂲",
+        "on": "󰂯",
+        "connected": "󰂱",
+        "disabled": "󰂲",
+    },
     "distro": {
         "deepin": "",
         "fedora": "",

@@ -1,3 +1,4 @@
+from fabric.utils import get_relative_path
 from gi.repository import GLib
 from typing import TypedDict, List, Dict
 
@@ -7,6 +8,8 @@ APP_CACHE_DIRECTORY = f"{SYSTEM_CACHE_DIR}/{APPLICATION_NAME}"
 
 
 NOTIFICATION_CACHE_FILE = f"{APP_CACHE_DIRECTORY}/notifications.json"
+
+ASSETS_DIR = get_relative_path("../assets/")
 
 DEFAULT_CONFIG = {
     "date_time": {

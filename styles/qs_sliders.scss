@@ -1,0 +1,58 @@
+/* Quick Settings Sliders */
+@use "theme.scss";
+
+.sliders-container {
+    padding: 8px 12px;
+    border-radius: 12px;
+    margin: 4px;
+    background-color: theme.$background-alt;
+}
+
+.brightness-slider-row,
+.volume-slider-row {
+    padding: 4px 8px;
+}
+
+.slider-icon {
+    min-width: 24px;
+    min-height: 24px;
+    color: theme.$text-main;
+}
+
+.slider-percentage {
+    font-size: 12px;
+    font-weight: 500;
+    color: theme.$text-secondary;
+    min-width: 40px;
+}
+
+.qs-slider {
+    min-height: 20px;
+    margin: 4px 0;
+}
+
+.qs-slider trough {
+    min-height: 8px;
+    border-radius: 4px;
+    background-color: theme.$surface-highlight;
+}
+
+.qs-slider trough highlight {
+    min-height: 8px;
+    border-radius: 4px;
+    background-color: theme.$primary;
+}
+
+.qs-slider trough slider {
+    min-width: 20px;
+    min-height: 20px;
+    border-radius: 10px;
+    background-color: theme.$text-main;
+    margin: -6px;
+}
+
+.qs-separator {
+    min-height: 1px;
+    margin: 4px 8px;
+    background-color: theme.$surface-highlight;
+}
