@@ -5,16 +5,18 @@ from fabric.widgets.image import Image
 from shared.widget_container import EventBoxWidget
 from shared import Popover
 from utils.icons import icons
-from utils import BarConfig, run_in_thread
+from utils import BarConfig
 from widgets.common.resolver import create_slide_revealer, set_expanded, on_leave
 
 
 class PlayerctlMenu(Popover):
-    def __init__(self, point_to_widget, player, config=None):
-        self.player = player
+    def __init__(self, point_to_widget, parent_widget, config=None):
+        self.parent_widget = parent_widget
         self.config = config or {}
         self.icon_size = self.config.get("icon_size", 16)
         self.poll_interval = self.config.get("menu_poll_interval", 1000)
+        self._poll_source_id = None
+        self._destroyed = False
 
         content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         content_box.set_name("playerctl-menu")
@@ -91,107 +93,93 @@ class PlayerctlMenu(Popover):
         content_box.show_all()
         super().__init__(content=content_box, point_to=point_to_widget)
 
-        self._update_track_info_async()
-        GLib.timeout_add(self.poll_interval, self._poll_tick)
-        self._update_play_pause_icon()
+        self.connect("destroy", self._on_destroy)
+
+        self._update_track_info()
+        self._poll_source_id = GLib.timeout_add(self.poll_interval, self._poll_tick)
+
+    def _on_destroy(self, *args):
+        self._destroyed = True
+        if self._poll_source_id is not None:
+            GLib.source_remove(self._poll_source_id)
+            self._poll_source_id = None
 
     def _on_play_pause_clicked(self, *args):
-        if not self.player or not getattr(self.player, "props", None):
+        if self._destroyed:
             return
-        try:
-            if self.player.props.playback_status == Playerctl.PlaybackStatus.PLAYING:
-                self.player.pause()
-            else:
-                self.player.play()
-        except Exception as e:
-            print(f"Error toggling play/pause: {e}")
+        self.parent_widget.player_action("play_pause")
 
     def _on_skip_back_clicked(self, *args):
-        if self.player and getattr(self.player, "props", None):
-            try:
-                self.player.previous()
-            except Exception as e:
-                print(f"Error skipping back: {e}")
+        if self._destroyed:
+            return
+        self.parent_widget.player_action("previous")
 
     def _on_skip_forward_clicked(self, *args):
-        if self.player and getattr(self.player, "props", None):
-            try:
-                self.player.next()
-            except Exception as e:
-                print(f"Error skipping forward: {e}")
-
-    def _update_play_pause_icon(self):
-        if not self.player or not getattr(self.player, "props", None):
+        if self._destroyed:
             return
-        try:
-            status = self.player.props.playback_status
-            icon_name = (
-                icons["playerctl"]["playing"]
-                if status == Playerctl.PlaybackStatus.PLAYING
-                else icons["playerctl"]["paused"]
-            )
-            GLib.idle_add(self._set_play_pause_icon, icon_name)
-        except Exception as e:
-            print(f"Error updating play/pause icon: {e}")
+        self.parent_widget.player_action("next")
 
-    def _set_play_pause_icon(self, icon_name):
+    def _update_play_pause_icon(self, status):
+        if self._destroyed:
+            return
+        icon_name = (
+            icons["playerctl"]["playing"]
+            if status == Playerctl.PlaybackStatus.PLAYING
+            else icons["playerctl"]["paused"]
+        )
         try:
             self.play_pause_icon.set_from_icon_name(icon_name)
-        except Exception as e:
-            print(f"Error setting play/pause icon: {e}")
+        except Exception:
+            pass
 
-    @run_in_thread
-    def _update_track_info_async(self):
-        if not self.player or not getattr(self.player, "props", None):
-            GLib.idle_add(self._reset_display)
+    def _update_track_info(self):
+        if self._destroyed:
             return
-        metadata = getattr(self.player.props, "metadata", None)
+
+        metadata = self.parent_widget.get_cached_metadata()
         if not metadata:
-            GLib.idle_add(self._reset_display)
+            self._reset_display()
             return
+
+        title = metadata.get("title", "")
+        artist = metadata.get("artist", "")
+        length_us = metadata.get("length", 0)
+        status = metadata.get("status", Playerctl.PlaybackStatus.STOPPED)
+        pos_us = metadata.get("position", 0)
+
+        cur_sec, total_sec = int(pos_us / 1e6), int(length_us / 1e6)
+        cur_min, cur_s = divmod(cur_sec, 60)
+        tot_min, tot_s = divmod(total_sec, 60)
+        time_text = f"{cur_min}:{cur_s:02} / {tot_min}:{tot_s:02}"
+
         try:
-            md = dict(metadata.unpack())
-            title = md.get("xesam:title", "")
-            artist = (md.get("xesam:artist") or [""])[0]
-            length_us = md.get("mpris:length", 0)
-            pos_us = getattr(self.player, "get_position", lambda: 0)()
+            self.title_label.set_text(re.sub(r"\r?\n", " ", title))
+            self.artist_label.set_text(re.sub(r"\r?\n", " ", artist))
+            self.time_label.set_text(time_text)
 
-            cur_sec, total_sec = int(pos_us / 1e6), int(length_us / 1e6)
-            cur_min, cur_s = divmod(cur_sec, 60)
-            tot_min, tot_s = divmod(total_sec, 60)
-            time_text = f"{cur_min}:{cur_s:02} / {tot_min}:{tot_s:02}"
+            adj = self.slider.get_adjustment()
+            if adj:
+                adj.set_upper(max(total_sec, 1))
+                adj.set_value(cur_sec)
 
-            GLib.idle_add(
-                self._update_labels_and_slider,
-                title,
-                artist,
-                time_text,
-                cur_sec,
-                total_sec,
-            )
-            self._update_play_pause_icon()
+            self._update_play_pause_icon(status)
         except Exception as e:
-            print(f"Error in track info update: {e}")
-            GLib.idle_add(self._reset_display)
-
-    def _update_labels_and_slider(self, title, artist, time_text, cur_sec, total_sec):
-        self.title_label.set_text(re.sub(r"\r?\n", " ", title))
-        self.artist_label.set_text(re.sub(r"\r?\n", " ", artist))
-        self.time_label.set_text(time_text)
-
-        adj = self.slider.get_adjustment()
-        if adj:
-            adj.set_upper(max(total_sec, 1))
-            adj.set_value(cur_sec)
+            print(f"Error updating display: {e}")
 
     def _poll_tick(self):
-        if self.player:
-            self._update_track_info_async()
+        if self._destroyed:
+            self._poll_source_id = None
+            return False
+
+        # Request parent to update position
+        self.parent_widget.update_position()
+        self._update_track_info()
         return True
 
     def _on_slider_click(self, widget, event):
-        if not self.player or not getattr(self.player, "props", None):
+        if self._destroyed:
             return False
+
         alloc = widget.get_allocation()
         if alloc.width <= 0:
             return False
@@ -200,24 +188,23 @@ class PlayerctlMenu(Popover):
         total_sec = widget.get_adjustment().get_upper()
         seek_sec = int(total_sec * fraction)
 
-        try:
-            if hasattr(self.player, "set_position"):
-                self.player.set_position(seek_sec * 1_000_000)
-            if hasattr(self.player, "play"):
-                self.player.play()
-        except Exception as e:
-            print(f"Error seeking in track: {e}")
+        self.parent_widget.player_action("seek", seek_sec * 1_000_000)
         return False
 
     def _reset_display(self):
-        self.title_label.set_text("")
-        self.artist_label.set_text("")
-        self.time_label.set_text("0:00 / 0:00")
-        adj = self.slider.get_adjustment()
-        if adj:
-            adj.set_value(0)
-            adj.set_upper(1)
-        GLib.idle_add(self._set_play_pause_icon, icons["playerctl"]["paused"])
+        if self._destroyed:
+            return
+        try:
+            self.title_label.set_text("")
+            self.artist_label.set_text("")
+            self.time_label.set_text("0:00 / 0:00")
+            adj = self.slider.get_adjustment()
+            if adj:
+                adj.set_value(0)
+                adj.set_upper(1)
+            self.play_pause_icon.set_from_icon_name(icons["playerctl"]["paused"])
+        except Exception:
+            pass
 
 
 class PlayerctlWidget(EventBoxWidget):
@@ -232,10 +219,18 @@ class PlayerctlWidget(EventBoxWidget):
         self.transition_duration = config.get("transition_duration", 250)
         self.tooltip_enabled = config.get("tooltip", True)
         self.poll_interval = config.get("poll_interval", 2000)
-        self.player = None
-        self.popup = None
 
+        self._current_player_name = None
+        self._cached_metadata = {}
+        self._player_valid = False
+        self.popup = None
+        self._poll_source_id = None
+        self._destroyed = False
+        self._pending_actions = []
+
+        # Player manager setup
         self.player_manager = Playerctl.PlayerManager.new()
+        self._players = {}  # name_str -> player
 
         self.icon_widget = Image(
             icon_name=icons["playerctl"]["music"],
@@ -268,10 +263,15 @@ class PlayerctlWidget(EventBoxWidget):
         self.box.add(self.icon_container)
         self.box.show_all()
 
+        # Connect manager signals
         self.player_manager.connect("player-vanished", self._on_player_vanished)
-        self.player_manager.connect("name-appeared", self._on_player_appeared)
-        self._setup_initial_player()
-        GLib.timeout_add(self.poll_interval, self._poll_players)
+        self.player_manager.connect("name-appeared", self._on_name_appeared)
+
+        # Initialize with existing players
+        for player_name in self.player_manager.props.player_names:
+            GLib.idle_add(self._init_player, player_name)
+
+        self._poll_source_id = GLib.timeout_add(self.poll_interval, self._poll_tick)
 
         self.connect(
             "enter-notify-event",
@@ -292,79 +292,265 @@ class PlayerctlWidget(EventBoxWidget):
         )
 
         self.connect("button-press-event", self.on_click)
+        self.connect("destroy", self._on_destroy)
+
+    def _on_destroy(self, *args):
+        self._destroyed = True
+        self._player_valid = False
+        if self._poll_source_id is not None:
+            GLib.source_remove(self._poll_source_id)
+            self._poll_source_id = None
+        self._players.clear()
+        if self.popup:
+            self.popup.destroy()
+            self.popup = None
+
+    def _init_player(self, player_name):
+        """Initialize a player - called via idle_add to defer from signal context."""
+        if self._destroyed:
+            return False
+        if not isinstance(player_name, Playerctl.PlayerName):
+            return False
+
+        name_str = player_name.name
+        if name_str in self._players:
+            return False
+
+        try:
+            player = Playerctl.Player.new_from_name(player_name)
+            self.player_manager.manage_player(player)
+            self._players[name_str] = player
+
+            # Connect signals - but defer actual property access
+            player.connect("metadata", self._on_metadata_signal)
+            player.connect("playback-status", self._on_status_signal)
+
+            # If no active player, use this one
+            if not self._current_player_name:
+                self._current_player_name = name_str
+                self._player_valid = True
+                # Defer metadata fetch
+                GLib.idle_add(self._fetch_metadata)
+
+        except Exception as e:
+            print(f"Error initializing player {name_str}: {e}")
+
+        return False
+
+    def _on_name_appeared(self, manager, player_name):
+        """New player appeared - defer initialization."""
+        if self._destroyed:
+            return
+        GLib.idle_add(self._init_player, player_name)
+
+    def _on_player_vanished(self, manager, player):
+        """Player vanished - find by object identity, don't query the player."""
+        if self._destroyed:
+            return
+
+        vanished_name = None
+        for name, p in list(self._players.items()):
+            if p is player:
+                vanished_name = name
+                break
+
+        if vanished_name:
+            del self._players[vanished_name]
+
+            if self._current_player_name == vanished_name:
+                self._current_player_name = None
+                self._player_valid = False
+                self._cached_metadata = {}
+
+                # Switch to another player if available
+                if self._players:
+                    self._current_player_name = next(iter(self._players.keys()))
+                    self._player_valid = True
+                    GLib.idle_add(self._fetch_metadata)
+                else:
+                    GLib.idle_add(self._clear_display)
+
+    def _on_metadata_signal(self, player, metadata):
+        """Metadata signal - defer actual property access."""
+        if self._destroyed:
+            return
+
+        # Check if this is our current player by object identity
+        current_player = self._players.get(self._current_player_name)
+        if player is not current_player:
+            return
+
+        # Defer the actual metadata fetch to avoid issues in signal context
+        GLib.idle_add(self._fetch_metadata)
+
+    def _on_status_signal(self, player, status):
+        """Playback status signal - status is passed directly, safe to use."""
+        if self._destroyed:
+            return
+
+        current_player = self._players.get(self._current_player_name)
+        if player is not current_player:
+            return
+
+        self._cached_metadata["status"] = status
+
+    def _fetch_metadata(self):
+        """Fetch metadata from current player - called via idle_add."""
+        if self._destroyed or not self._player_valid:
+            return False
+
+        player = self._players.get(self._current_player_name)
+        if not player:
+            self._player_valid = False
+            return False
+
+        try:
+            metadata = player.props.metadata
+            if metadata:
+                md = dict(metadata.unpack())
+                self._cached_metadata = {
+                    "title": md.get("xesam:title", ""),
+                    "artist": (md.get("xesam:artist") or [""])[0],
+                    "length": md.get("mpris:length", 0),
+                    "status": player.props.playback_status,
+                    "position": 0,
+                }
+                # Try to get position
+                try:
+                    self._cached_metadata["position"] = player.get_position() or 0
+                except Exception:
+                    pass
+
+                self._update_display()
+            else:
+                self._cached_metadata = {}
+                self._clear_display()
+
+        except Exception as e:
+            print(f"Error fetching metadata: {e}")
+            # Player might be dead
+            self._handle_player_dead()
+
+        return False
+
+    def _handle_player_dead(self):
+        """Handle when we detect the player is dead."""
+        if self._current_player_name and self._current_player_name in self._players:
+            del self._players[self._current_player_name]
+
+        self._current_player_name = None
+        self._player_valid = False
+        self._cached_metadata = {}
+
+        if self._players:
+            self._current_player_name = next(iter(self._players.keys()))
+            self._player_valid = True
+            GLib.idle_add(self._fetch_metadata)
+        else:
+            self._clear_display()
+
+    def update_position(self):
+        """Update cached position - called by popup for slider updates."""
+        if self._destroyed or not self._player_valid:
+            return
+
+        player = self._players.get(self._current_player_name)
+        if not player:
+            return
+
+        try:
+            self._cached_metadata["position"] = player.get_position() or 0
+        except Exception:
+            # Don't crash, just keep old position
+            pass
+
+    def _update_display(self):
+        """Update the label with cached metadata."""
+        if self._destroyed:
+            return
+
+        title = self._cached_metadata.get("title", "")
+        artist = self._cached_metadata.get("artist", "")
+        display_text = f"{title} – {artist}" if artist else title
+
+        try:
+            self.label.set_text(display_text)
+            if self.tooltip_enabled:
+                self.set_tooltip_text(display_text)
+        except Exception:
+            pass
+
+    def _clear_display(self):
+        """Clear the display."""
+        if self._destroyed:
+            return False
+
+        try:
+            self.label.set_text("")
+            if self.tooltip_enabled:
+                self.set_tooltip_text("")
+        except Exception:
+            pass
+
+        if self.popup:
+            self.popup.destroy()
+            self.popup = None
+
+        return False
+
+    def get_cached_metadata(self):
+        """Get cached metadata for popup."""
+        if not self._player_valid:
+            return {}
+        return self._cached_metadata.copy()
+
+    def player_action(self, action, value=None):
+        """Perform a player action safely."""
+        if self._destroyed or not self._player_valid:
+            return
+
+        player = self._players.get(self._current_player_name)
+        if not player:
+            return
+
+        try:
+            if action == "play_pause":
+                status = self._cached_metadata.get("status")
+                if status == Playerctl.PlaybackStatus.PLAYING:
+                    player.pause()
+                else:
+                    player.play()
+            elif action == "next":
+                player.next()
+            elif action == "previous":
+                player.previous()
+            elif action == "seek" and value is not None:
+                player.set_position(value)
+                player.play()
+        except Exception as e:
+            print(f"Error performing action {action}: {e}")
+            self._handle_player_dead()
 
     def on_click(self, *_):
         if self.popup:
             self.popup.destroy()
             self.popup = None
-        if not self.player:
+
+        if not self._player_valid:
             return
-        self.popup = PlayerctlMenu(self, self.player, config=self.config)
+
+        self.popup = PlayerctlMenu(self, self, config=self.config)
         self.popup.open()
 
-    @run_in_thread
-    def _on_metadata_changed(self, player, metadata=None):
-        if not self.player or not getattr(player, "props", None):
-            return
-        md = dict(player.props.metadata.unpack()) if player.props.metadata else {}
-        title = md.get("xesam:title", "")
-        artist = (md.get("xesam:artist") or [""])[0]
-        display_text = f"{title} – {artist}" if artist else title
-        GLib.idle_add(self._update_label_text, display_text)
+    def _poll_tick(self):
+        """Periodic poll to check state and update position."""
+        if self._destroyed:
+            return False
 
-    def _update_label_text(self, text):
-        self.label.set_text(text)
-        if self.tooltip_enabled:
-            self.set_tooltip_text(text)
-        if self.popup:
-            self.popup._update_track_info_async()
+        # If no current player but we have players, pick one
+        if not self._current_player_name and self._players:
+            self._current_player_name = next(iter(self._players.keys()))
+            self._player_valid = True
+            self._fetch_metadata()
 
-    def _setup_initial_player(self):
-        player_names = self.player_manager.props.player_names
-        if player_names and isinstance(player_names[0], Playerctl.PlayerName):
-            player = Playerctl.Player.new_from_name(player_names[0])
-            self._set_player(player)
-
-    def _poll_players(self):
-        player_names = self.player_manager.props.player_names
-        if not player_names and self.player:
-            self._clear_player()
-        elif player_names:
-            current = (
-                getattr(self.player.props, "player_name", None) if self.player else None
-            )
-            available = [p for p in player_names]
-            if current not in available:
-                player = Playerctl.Player.new_from_name(available[0])
-                self._set_player(player)
         return True
-
-    def _on_player_vanished(self, _, player):
-        if self.player and getattr(player, "props", None):
-            if player.props.player_name == self.player.props.player_name:
-                self._clear_player()
-
-    def _on_player_appeared(self, _, player_name_obj):
-        if not self.player and isinstance(player_name_obj, Playerctl.PlayerName):
-            player = Playerctl.Player.new_from_name(player_name_obj)
-            self._set_player(player)
-
-    def _set_player(self, player):
-        if self.player:
-            try:
-                self.player.disconnect_by_func(self._on_metadata_changed)
-            except TypeError:
-                pass
-        self.player = player
-        if player:
-            player.connect("metadata", self._on_metadata_changed)
-            self._on_metadata_changed(player)
-
-    def _clear_player(self):
-        self.player = None
-        self.label.set_text("")
-        if self.tooltip_enabled:
-            self.set_tooltip_text("")
-        if self.popup:
-            self.popup.destroy()
-            self.popup = None
