@@ -1,4 +1,5 @@
 import re
+import utils.functions as helpers
 from gi.repository import GObject, GLib, Playerctl, Gtk
 from fabric.widgets.label import Label
 from fabric.widgets.image import Image
@@ -153,8 +154,12 @@ class PlayerctlMenu(Popover):
         time_text = f"{cur_min}:{cur_s:02} / {tot_min}:{tot_s:02}"
 
         try:
-            self.title_label.set_text(re.sub(r"\r?\n", " ", title))
-            self.artist_label.set_text(re.sub(r"\r?\n", " ", artist))
+            self.title_label.set_text(
+                helpers.truncate(re.sub(r"\r?\n", " ", title), 30)
+            )
+            self.artist_label.set_text(
+                helpers.truncate(re.sub(r"\r?\n", " ", artist), 30)
+            )
             self.time_label.set_text(time_text)
 
             adj = self.slider.get_adjustment()
@@ -471,7 +476,7 @@ class PlayerctlWidget(EventBoxWidget):
 
         title = self._cached_metadata.get("title", "")
         artist = self._cached_metadata.get("artist", "")
-        display_text = f"{title} – {artist}" if artist else title
+        display_text = helpers.truncate(f"{title} – {artist}" if artist else title, 20)
 
         try:
             self.label.set_text(display_text)
