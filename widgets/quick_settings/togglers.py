@@ -215,9 +215,15 @@ class WifiQuickSetting(HoverButton):
         self.wifi_icon.set_label(text_icons["wifi"]["disconnected"])
         self.add_style_class("active")
 
+    def _truncate_ssid(self, ssid: str, max_length: int = 11) -> str:
+        """Truncate SSID if it exceeds max length."""
+        if len(ssid) > max_length:
+            return ssid[: max_length - 1] + "…"  # Using ellipsis character
+        return ssid
+
     def _set_connected_state(self, ssid: str, strength: int):
         """Set UI for WiFi connected."""
-        self.wifi_label.set_label(ssid)
+        self.wifi_label.set_label(self._truncate_ssid(ssid))
         self.wifi_icon.set_label(self._get_strength_icon(strength))
         self.add_style_class("active")
 
