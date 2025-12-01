@@ -306,7 +306,6 @@ class NetworkService(Service):
                 x
                 for x in devices
                 if x.get_device_type() == device_type
-                and x.get_active_connection() is not None
             ),
             None,
         )
