@@ -106,15 +106,6 @@ class NetworkServiceWrapper:
     def _on_network_device_changed(self, *_):
         self.update_network_icon()
 
-    def _truncate_ssid(self, ssid: str, max_length: int = 11) -> str:
-        """Truncate SSID if it exceeds max length."""
-        if ssid != None:
-            if len(ssid) > max_length:
-                return ssid[: max_length - 1] + "…"  # Using ellipsis character
-            return ssid
-        else:
-            return ""
-
     def update_network_icon(self):
         wifi_device = self.network.wifi_device
         eth_device = self.network.ethernet_device
@@ -139,7 +130,7 @@ class NetworkServiceWrapper:
         )
 
         if self.show_network_name and self.network_ssid_label:
-            self.network_ssid_label.set_text(self._truncate_ssid(ssid))
+            self.network_ssid_label.set_text(helpers.truncate(ssid))
 
     def _set_icon(
         self, image_widget: Image, icon_name: str, fallback_icon: str, size: int = 16

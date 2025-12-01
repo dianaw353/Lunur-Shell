@@ -231,3 +231,12 @@ def convert_to_percent(
         return int((current / max) * 100)
     else:
         return (current / max) * 100
+
+def truncate(string: str, max_length: int = 11) -> str:
+    """Truncate string if it exceeds max length."""
+    if string != None:
+        if len(string) > max_length:
+            return string[: max_length - 1] + "…"  # Using ellipsis character
+        return string
+    else:
+        return ""
