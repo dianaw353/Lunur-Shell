@@ -105,7 +105,7 @@ class WifiQuickSetting(HoverButton):
             label="WiFi Off",
         )
         self.wifi_icon = nerd_font_icon(
-            icon=get_icon(text_icons["wifi"]["off"]),
+            icon=text_icons["wifi"]["off"],
             props={"style_classes": ["panel-font-icon"]},
         )
 
