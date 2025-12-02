@@ -362,8 +362,10 @@ class BluetoothQuickSetting(HoverButton):
     def _set_connected_state(self, device_name: str, device_count: int = 1):
         """Set UI for Bluetooth connected."""
         if device_count > 1:
-            self.bt_label.set_label(f"{device_name} +{device_count - 1}")
+            self.bt_label.set_label(
+                helpers.truncate(f"{device_name}", 9) + f" +{device_count - 1}"
+            )
         else:
-            self.bt_label.set_label(device_name or "Connected")
+            self.bt_label.set_label(helpers.truncate(device_name) or "Connected")
         self.bt_icon.set_label(text_icons["bluetooth"]["connected"])
         self.add_style_class("active")

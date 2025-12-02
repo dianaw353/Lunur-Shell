@@ -22,6 +22,7 @@ $slider-height: 12px;
   padding: common.toEm(3) 0;
   padding-left: common.toEm(10);
   transition: background-color 120ms ease, color 120ms ease;
+  min-width: 170px;
 
   &:hover,
   &:focus {
@@ -30,7 +31,6 @@ $slider-height: 12px;
 
   &:active {
     background-color: color.mix(theme.$primary, theme.$surface-highlight, 15%);
-    border: 1px solid theme.$primary;
   }
 }
 
