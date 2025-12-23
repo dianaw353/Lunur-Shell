@@ -6,7 +6,7 @@ https://github.com/dianaw353/Lunur-Shell/releases/tag/v0.4.0
 - Refactor system tray to use revealer instead of popover.
 - Add OSD for volume and brightness.
 - Refactor the logic for slide to reveal animation.
-- Implement a basic quick settings.
+- Implement a basic quick settings panel.
 - Do some improvements regarding icon resolution.
 - Add player popup for player widget.
 - Add a flag for logging debug info.
@@ -16,9 +16,12 @@ https://github.com/dianaw353/Lunur-Shell/releases/tag/v0.4.0
 # Fixes
 - Fix the cases where text isn't being copied and clipboard doesn't consistently open respectively.
 - Break description line if it gets too long in app launcher.
-- Remove horizontal scrollbar for app launcher and keyboard shortcuts window.
+- Remove horizontal scrollbar for app launcher and keyboard shortcuts windows.
 - Put shortcut descriptions in keyboard shortcuts window into their own lines.
 - Record system audio instead of microphone when recording screen.
+- The date and time component now updates instantly upon time zone change.
+- Fix curves for when the bar is set to be at the bottom of the display.
+- Fix the screenshot commands for them to work properly.
 
 # Misc
 - Change media backend from MPRIS to playerctl.
