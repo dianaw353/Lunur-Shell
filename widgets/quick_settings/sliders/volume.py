@@ -53,10 +53,10 @@ class VolumeSlider(SliderRow):
             self.set_value(volume)
             self._update_icon(volume, muted)
 
-    def _update_icon(self, volume: float, muted: bool = False):
+    def _update_icon(self, volume: int, muted: bool = False):
         try:
             icon_info = get_audio_icon_name(volume, muted)
-            icon_name = icon_info.get("icon", icons["audio"]["volume"]["medium"])
-            self.set_icon(icon_name)
+            icon_name = icon_info["icon"]
+            self.icon.set_from_icon_name(icon_name)
         except Exception:
             pass
