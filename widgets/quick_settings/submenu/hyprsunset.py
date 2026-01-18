@@ -33,7 +33,7 @@ class HyprSunsetSubMenu(QuickSubMenu):
         )
 
         self.value_label = Label(
-            label="2600",
+            label=("2600"+"K"),
             style_classes=["qs-slider-value"],
         )
 
@@ -60,7 +60,7 @@ class HyprSunsetSubMenu(QuickSubMenu):
 
     def update_value_label(self, value: int):
         """Update the value label display."""
-        self.value_label.set_label(f"{value}")
+        self.value_label.set_label(f"{value}K")
 
     @cooldown(0.1)
     def on_scale_move(self, scale: Scale):
