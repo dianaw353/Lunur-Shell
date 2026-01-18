@@ -2,5 +2,11 @@
 
 from .wifi import WifiQuickSetting
 from .bluetooth import BluetoothQuickSetting
+from .hyprsunset import HyprSunsetSubMenu, HyprSunsetToggle
 
-__all__ = ["WifiQuickSetting", "BluetoothQuickSetting"]
+__all__ = [
+    "WifiQuickSetting",
+    "BluetoothQuickSetting",
+    "HyprSunsetSubMenu",
+    "HyprSunsetToggle",
+]

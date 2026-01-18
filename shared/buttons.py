@@ -108,6 +108,7 @@ class QSToggleButton(Box, BaseWidget):
             Box(
                 h_align="start",
                 v_align="center",
+                spacing=10,
                 style_classes=["quicksettings-toggle-action-box"],
                 children=[self.action_icon, self.action_label],
             ),

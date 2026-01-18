@@ -2,6 +2,7 @@ import ctypes
 import json
 import os
 import shutil
+import subprocess
 import time
 from functools import lru_cache
 from typing import Dict, List, Literal, Optional, Union, Any
@@ -50,30 +51,43 @@ def ttl_lru_cache(seconds_to_live: int, maxsize: int = 128):
     return wrapper
 
 
+def toggle_command(command: str, full_command: str) -> bool:
+    """
+    Function to toggle a shell command.
+    Returns True if the command is now running (enabled), False if stopped (disabled).
+    """
+    if is_app_running(command):
+        subprocess.run(f"pkill -f {command}", shell=True, capture_output=True)
+        return False
+    else:
+        subprocess.Popen(
+            full_command.split(" "),
+            stdin=subprocess.DEVNULL,  # No input stream
+            stdout=subprocess.DEVNULL,  # Optionally discard the output
+            stderr=subprocess.DEVNULL,  # Optionally discard the error output
+            start_new_session=True,  # This prevents the process from being killed
+        )
+        return True
+
+
 def is_app_running(app_name: str) -> bool:
     """
-    Checks if an application is running by reading /proc.
-    Significantly faster than spawning a shell for 'pidof'.
+    Checks if an application is running using pgrep.
     """
     try:
-        # Iterate over pids in /proc
-        for pid in os.listdir("/proc"):
-            if pid.isdigit():
-                try:
-                    with open(f"/proc/{pid}/comm", "r") as f:
-                        # comm file contains the short process name
-                        if f.read().strip() == app_name:
-                            return True
-                except (FileNotFoundError, PermissionError):
-                    continue
+        result = subprocess.run(
+            ["pgrep", "-f", app_name],
+            capture_output=True,
+            text=True
+        )
+        return result.returncode == 0
     except Exception:
-        pass
-    return False
+        return False
 
 
 def kill_process(process_name: str):
     """Kills a process by name asynchronously."""
-    exec_shell_command_async(f"pkill {process_name}", lambda *_: None)
+    exec_shell_command_async(f"pkill -f {process_name}", lambda *_: None)
 
 
 @ttl_lru_cache(600, 10)
@@ -252,7 +266,7 @@ def validate_widgets(parsed_data: Dict, default_config: Dict):
 
         if not (0 <= idx < len(groups_list)):
             raise ValueError(
-                f"{name} index {idx} out of range (0-{len(groups_list)-1})."
+                f"{name} index {idx} out of range (0-{len(groups_list) - 1})."
             )
 
         group = groups_list[idx]

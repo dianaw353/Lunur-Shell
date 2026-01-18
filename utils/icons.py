@@ -95,6 +95,10 @@ text_icons = {
         "slackware": "",
     },
     "recorder": "󰻂",
+    "nightlight": {
+        "enabled": "󱩌",
+        "disabled": "󰛨",
+    },
 }
 
 icons = {

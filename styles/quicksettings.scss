@@ -43,3 +43,31 @@
   color: theme.$text-muted-light;
 }
 
+// Submenu styles
+#submenu {
+  margin-top: 10px;
+  min-height: 100px;
+  background-color: theme.$background-alt;
+  border-radius: variable.$radius;
+  padding: common.toEm(8);
+
+  .submenu-title-box {
+    margin-bottom: 10px;
+    padding: common.toEm(5);
+
+    .panel-font-icon {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .submenu-title-label {
+      margin-left: 10px;
+      @extend %caption_heading;
+    }
+  }
+
+  .submenu-item-label {
+    font-size: 13px;
+    margin-left: 5px;
+  }
+}
