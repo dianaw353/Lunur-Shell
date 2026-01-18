@@ -8,6 +8,7 @@ from gi.repository import Gtk
 
 from shared.buttons import QSChevronButton
 from shared.submenu import QuickSubMenu
+from shared.separator import Separator
 from utils.functions import is_app_running, toggle_command
 from utils.icons import text_icons
 
@@ -19,6 +20,11 @@ class HyprSunsetSubMenu(QuickSubMenu):
         self.scan_button = None
 
         self._hyprland_connection = get_hyprland_connection()
+
+        self.scale_icon = Label(
+            label=text_icons["nightlight"]["enabled"],
+            style_classes=["qs-slider-value"],
+        )
 
         self.scale = Scale(
             name="hyprsunset-scale",
@@ -39,9 +45,20 @@ class HyprSunsetSubMenu(QuickSubMenu):
 
         # Wrap the scale and value in a horizontal box
         scale_container = Box(
-            children=[self.scale, self.value_label],
+            children=[self.scale_icon, self.scale, self.value_label],
             h_expand=True,
             v_expand=False,
+            spacing=10,
+        )
+
+        self.separator = Separator(
+            orientation="horizontal",
+            style_classes=["app-volume-separator"],
+        )
+
+        main_container = Box(
+            children=[self.separator, scale_container],
+            orientation=Gtk.Orientation.VERTICAL,
             spacing=10,
         )
 
@@ -50,7 +67,7 @@ class HyprSunsetSubMenu(QuickSubMenu):
             title_icon=text_icons["nightlight"]["enabled"],
             name="hyprsunset-sub-menu",
             scan_button=self.scan_button,
-            child=scale_container,
+            child=main_container,
             **kwargs,
         )
 
