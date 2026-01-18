@@ -2,6 +2,7 @@ from fabric.hyprland.widgets import get_hyprland_connection
 from fabric.utils import cooldown, exec_shell_command_async, invoke_repeater
 from fabric.widgets.scale import Scale
 from fabric.widgets.box import Box
+from fabric.widgets.label import Label
 
 from gi.repository import Gtk
 
@@ -21,7 +22,7 @@ class HyprSunsetSubMenu(QuickSubMenu):
 
         self.scale = Scale(
             name="hyprsunset-scale",
-            draw_value=True,
+            draw_value=False,
             digits=0,
             increments=(100, 100),
             max_value=10000,
@@ -31,11 +32,17 @@ class HyprSunsetSubMenu(QuickSubMenu):
             h_expand=True,
         )
 
-        # Wrap the scale in a box with proper sizing
+        self.value_label = Label(
+            label="2600",
+            style_classes=["qs-slider-value"],
+        )
+
+        # Wrap the scale and value in a horizontal box
         scale_container = Box(
-            children=[self.scale],
+            children=[self.scale, self.value_label],
             h_expand=True,
             v_expand=False,
+            spacing=10,
         )
 
         super().__init__(
@@ -51,9 +58,14 @@ class HyprSunsetSubMenu(QuickSubMenu):
         self.scale.connect("value-changed", self.on_scale_move)
         invoke_repeater(1000, self.update_scale)
 
+    def update_value_label(self, value: int):
+        """Update the value label display."""
+        self.value_label.set_label(f"{value}")
+
     @cooldown(0.1)
     def on_scale_move(self, scale: Scale):
         temperature = int(scale.get_value())
+        self.update_value_label(temperature)
         exec_shell_command_async(
             f"hyprctl hyprsunset temperature {temperature}",
             lambda *_: self._update_ui(temperature),
@@ -85,6 +97,7 @@ class HyprSunsetSubMenu(QuickSubMenu):
             return
 
         self.scale.set_value(sanitized_value)
+        self.update_value_label(sanitized_value)
         self.scale.set_tooltip_text(f"{sanitized_value}K")
 
 
