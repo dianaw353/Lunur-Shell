@@ -22,6 +22,7 @@ class HyprSunsetSubMenu(QuickSubMenu):
         self.scale = Scale(
             name="hyprsunset-scale",
             draw_value=True,
+            digits=0,
             increments=(100, 100),
             max_value=10000,
             min_value=1000,
