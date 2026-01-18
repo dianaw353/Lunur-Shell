@@ -55,8 +55,8 @@ class QuickSettingsMenu(Popover):
 
         self.grid.attach(self.wifi_btn, 0, 0, 1, 1)
         self.grid.attach(self.bt_btn, 1, 0, 1, 1)
-        self.grid.attach(self.notification_btn, 2, 0, 1, 1)
-        self.grid.attach(self.hyprsunset, 0, 1, 1, 1)
+        self.grid.attach(self.notification_btn, 0, 1, 1, 1)
+        self.grid.attach(self.hyprsunset, 1, 1, 1, 1)
 
         content_box.pack_start(self.grid, True, True, 0)
         
