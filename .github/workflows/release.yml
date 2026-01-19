@@ -8,23 +8,30 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-22.04
-    if: github.repository == 'dianaw353/Lunur-Shell'
+    #if: github.repository == 'dianaw353/Lunur-Shell'
     continue-on-error: true
+    permissions:
+      contents: write # Required for creating releases/tags
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Compare current release with project version
         id: compare_versions
         run: |
-          if [ "$(gh release view -q '.tagName' --json tagName)" == "$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'" | sed 's/^/v/')" ]; then
+          # Check if tag already exists in remote release
+          CURRENT_TAG=$(gh release view -q '.tagName' --json tagName 2>/dev/null || echo "none")
+          PROJECT_VERSION=$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'" | sed 's/^/v/')
+          
+          if [ "$CURRENT_TAG" == "$PROJECT_VERSION" ]; then
             echo "No new release to generate!"
             echo "NEW_RELEASE=0" >> $GITHUB_ENV
-            exit
+            exit 0
           fi
+          
           # Apparently the tag still exists when the release is deleted from GitHub web interface...
           # Also mock the exit status so that it always returns with code 0.
-          git push --delete origin refs/tags/$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'" | sed 's/^/v/') || true
+          git push --delete origin refs/tags/$PROJECT_VERSION || true
           echo "NEW_RELEASE=1" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -84,12 +91,12 @@ jobs:
 
       - name: Create release
         if: ${{ env.NEW_RELEASE == '1' }}
-        uses: actions/create-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          release_name: ${{ env.PROPER_RELEASE_TITLE }} # No "Release" prefix here
+          name: ${{ env.PROPER_RELEASE_TITLE }}
           body: ${{ env.RELEASE_NOTES }}
           draft: false
-          prerelease: ${{ env.IS_PRERELEASE }}
+          prerelease: ${{ env.IS_PRERELEASE == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
