@@ -14,17 +14,17 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Compare current release with VERSION file
+      - name: Compare current release with project version
         id: compare_versions
         run: |
-          if [ "$(gh release view -q '.tagName' --json tagName)" == "$(cat assets/VERSION)" ]; then
+          if [ "$(gh release view -q '.tagName' --json tagName)" == "$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'" | sed 's/^/v/')" ]; then
             echo "No new release to generate!"
             echo "NEW_RELEASE=0" >> $GITHUB_ENV
             exit
           fi
           # Apparently the tag still exists when the release is deleted from GitHub web interface...
           # Also mock the exit status so that it always returns with code 0.
-          git push --delete origin refs/tags/$(cat assets/VERSION) || true
+          git push --delete origin refs/tags/$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'" | sed 's/^/v/') || true
           echo "NEW_RELEASE=1" >> $GITHUB_ENV
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -49,7 +49,7 @@ jobs:
         if: ${{ env.NEW_RELEASE == '1' }}
         run: |
           # Generate a new tag based on the version
-          TAG_NAME=$(cat assets/VERSION)
+          TAG_NAME=$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'" | sed 's/^/v/')
           git tag $TAG_NAME
           git push origin $TAG_NAME
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV

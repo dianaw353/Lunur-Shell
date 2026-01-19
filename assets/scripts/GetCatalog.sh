@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Read the current version from the VERSION file and create the header
-VERSION=$(sed 's/^v//' assets/VERSION)
+VERSION=$(grep -m 1 version pyproject.toml | tr -d 'version = "' | tr -d "'")
 VERSION_HEADER="Version $VERSION"
 
 # Define the path to the CHANGELOG.md file
