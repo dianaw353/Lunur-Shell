@@ -6,7 +6,7 @@ from fabric.widgets.wayland import WaylandWindow as Window
 from shared.widget_container import ToggleableWidget
 from shared.module_group import ModuleGroup
 from shared.collapsible_groups import CollapsibleGroups
-from utils import HyprlandWithMonitors
+from utils.monitors import HyprlandWithMonitors
 from utils.widget_utils import lazy_load_widget
 from modules.corners import SideCorner
 from fabric.utils import logger

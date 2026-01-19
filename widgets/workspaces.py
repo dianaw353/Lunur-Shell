@@ -1,6 +1,6 @@
 from fabric.hyprland.widgets import WorkspaceButton as WsButton, HyprlandWorkspaces
 from shared.widget_container import BoxWidget
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from utils.functions import unique_list
 from utils.widget_utils import setup_cursor_hover
 

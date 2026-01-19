@@ -2,7 +2,7 @@ from modules.launcher import AppLauncher
 from utils.functions import get_distro_icon
 from utils.widget_utils import text_icon
 from utils.config import widget_config
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from shared.widget_container import ButtonWidget
 
 

@@ -8,7 +8,7 @@ from fabric.widgets.image import Image
 from shared.pop_over import Popover
 from shared.reveal import HoverRevealer
 from utils.icons import icons
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from utils.exceptions import PlayerctlImportError
 
 try:

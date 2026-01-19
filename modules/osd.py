@@ -8,7 +8,8 @@ from fabric.widgets.revealer import Revealer
 from fabric.widgets.wayland import WaylandWindow as Window
 from gi.repository import GLib, GObject
 
-from services import audio_service, Brightness
+from services import audio_service
+from services.brightness import Brightness
 from utils.icons import icons
 from utils.widget_utils import (
     create_scale,

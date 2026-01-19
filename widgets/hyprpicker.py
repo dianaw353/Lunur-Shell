@@ -2,7 +2,7 @@ from gi.repository import Gtk, Gdk
 from fabric.widgets.label import Label
 from fabric.utils import exec_shell_command_async, get_relative_path
 from utils.config import widget_config
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from shared.widget_container import ButtonWidget
 from utils.icons import text_icons
 import os

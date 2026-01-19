@@ -4,9 +4,9 @@ from fabric.widgets.image import Image
 from fabric.widgets.label import Label
 from gi.repository import GdkPixbuf, GLib, Gio, Gtk
 
-from services import BatteryService
+from services.battery import BatteryService
 from shared.widget_container import ButtonWidget
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from utils.functions import format_time, send_notification
 from utils.icons import icons
 

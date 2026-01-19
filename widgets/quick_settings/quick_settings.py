@@ -1,7 +1,7 @@
 import time
 from fabric.utils import logger
 from fabric.widgets.box import Box
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from shared.widget_container import ButtonWidget
 from .services import (
     AudioService,

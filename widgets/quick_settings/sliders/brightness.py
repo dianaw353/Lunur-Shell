@@ -1,7 +1,7 @@
 # widgets/quick_settings/sliders/brightness.py
 
 from .slider_row import SliderRow
-from services import Brightness
+from services.brightness import Brightness
 import utils.functions as helpers
 from utils.icons import icons
 from utils.widget_utils import get_brightness_icon_name

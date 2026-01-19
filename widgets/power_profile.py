@@ -3,7 +3,7 @@ from fabric.utils import exec_shell_command_async
 from shared.widget_container import ButtonWidget
 from utils.icons import icons
 from utils.widget_utils import get_icon
-from utils import ExecutableNotFoundError
+from utils.exceptions import ExecutableNotFoundError
 import utils.functions as helpers
 from shared.dbus_helper import GioDBusHelper
 

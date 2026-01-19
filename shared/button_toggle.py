@@ -2,6 +2,7 @@ from fabric.utils import invoke_repeater
 from fabric.widgets.label import Label
 
 import utils.functions as helpers
+from utils.widget_utils import nerd_font_icon
 
 from .widget_container import ButtonWidget
 

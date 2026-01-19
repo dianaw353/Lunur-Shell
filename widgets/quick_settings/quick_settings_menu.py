@@ -7,9 +7,9 @@ from .sliders.brightness import BrightnessSlider
 from .sliders.volume import VolumeSlider
 from .sliders.microphone import MicrophoneSlider
 from .togglers import NotificationQuickSetting
-from .submenu import (
-    WifiQuickSetting,
-    BluetoothQuickSetting,
+from .submenu.wifi import WifiQuickSetting
+from .submenu.bluetooth import BluetoothQuickSetting
+from .submenu.hyprsunset import (
     HyprSunsetSubMenu,
     HyprSunsetToggle,
 )

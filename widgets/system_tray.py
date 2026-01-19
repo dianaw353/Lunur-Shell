@@ -3,7 +3,7 @@ from fabric.widgets.image import Image
 from fabric.system_tray import SystemTray, SystemTrayItem
 from shared.widget_container import HoverButton
 from shared.reveal import HoverRevealer
-from utils import BarConfig
+from utils.widget_settings import BarConfig
 from utils.icons import icons
 from widgets.common.resolver import resolve_icon
 

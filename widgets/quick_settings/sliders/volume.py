@@ -6,6 +6,7 @@ from fabric.widgets.revealer import Revealer
 from fabric.widgets.label import Label
 from fabric.widgets.image import Image
 from fabric.widgets.scale import Scale
+from fabric.utils import logger
 from gi.repository import Gtk
 from .slider_row import SliderRow
 from services import audio_service
@@ -69,8 +70,8 @@ class AppVolumeControl(Box):
                 # Try to load as icon name first
                 self.icon.set_from_icon_name(self.stream.icon_name, icon_size)
                 return
-            except:
-                pass
+            except Exception:
+                logger.error("[Quick settings] Loading volume icon failed: {e}")
 
         # Try to get icon from application_id
         if hasattr(self.stream, "application_id") and self.stream.application_id:
@@ -87,10 +88,12 @@ class AppVolumeControl(Box):
                     try:
                         self.icon.set_from_icon_name(icon_name, icon_size)
                         return
-                    except:
-                        continue
-            except:
-                pass
+                    except Exception as e:
+                        logger.error(
+                            f"[Quick settings] Loading icon {icon_name} failed: {e}"
+                        )
+            except Exception as e:
+                logger.error(f"[Quick settings] Failed to fetch app icon: {e}")
 
         # Fallback to audio icon
         self.icon.set_from_icon_name(icons["audio"]["volume"]["medium"], icon_size)

@@ -13,12 +13,12 @@ from fabric.utils import (
 from gi.repository import Gtk
 
 import utils.functions as helpers
-from utils import (
+from utils.constants import (
     APPLICATION_NAME,
     APP_CACHE_DIRECTORY,
-    ExecutableNotFoundError,
-    widget_config,
 )
+from utils.exceptions import ExecutableNotFoundError
+from utils.config import widget_config
 
 # --- Configuration & Logging Setup ---
 DEBUG = widget_config.get("general", {}).get("debug", False)

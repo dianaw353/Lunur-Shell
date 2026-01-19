@@ -3,8 +3,8 @@
 from gi.repository import GLib
 from fabric.widgets.image import Image
 from fabric.widgets.label import Label
-from services import Brightness, audio_service
-from services import bluetooth_service
+from services.brightness import Brightness
+from services import audio_service, bluetooth_service
 from utils import functions as helpers
 from utils.icons import icons
 from utils.widget_utils import get_audio_icon_name, get_brightness_icon_name

@@ -2,11 +2,16 @@
 
 from fabric.widgets.box import Box
 from fabric.widgets.label import Label
-from services import NetworkService, Wifi
 from shared.buttons import HoverButton
 from utils.icons import text_icons
 from utils.widget_utils import nerd_font_icon
 import utils.functions as helpers
+from utils.exceptions import NetworkManagerNotFoundError
+
+try:
+    from services.network import NetworkService, Wifi
+except ImportError:
+    raise NetworkManagerNotFoundError()
 
 
 class WifiQuickSetting(HoverButton):
