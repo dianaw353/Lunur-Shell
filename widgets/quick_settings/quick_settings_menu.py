@@ -8,7 +8,7 @@ from .sliders.volume import VolumeSlider
 from .sliders.microphone import MicrophoneSlider
 from .togglers import NotificationQuickSetting
 from .submenu.wifi import WifiQuickSetting
-from .submenu.bluetooth import BluetoothQuickSetting
+from .submenu.bluetooth import BluetoothToggle, BluetoothSubMenu
 from .submenu.hyprsunset import (
     HyprSunsetSubMenu,
     HyprSunsetToggle,
@@ -49,7 +49,7 @@ class QuickSettingsMenu(Popover):
             row_homogeneous=True,
         )
         self.wifi_btn = WifiQuickSetting()
-        self.bt_btn = BluetoothQuickSetting()
+        self.bt_btn = BluetoothToggle(submenu=BluetoothSubMenu())
         self.notification_btn = NotificationQuickSetting()
         self.hyprsunset = HyprSunsetToggle(submenu=HyprSunsetSubMenu(), popup=self)
 
@@ -60,11 +60,13 @@ class QuickSettingsMenu(Popover):
 
         content_box.pack_start(self.grid, True, True, 0)
 
-        # Add the hyprsunset submenu to the content box
+        # Add the submenus to the content box
+        content_box.pack_start(self.bt_btn.submenu, False, False, 0)
         content_box.pack_start(self.hyprsunset.submenu, False, False, 0)
 
-        # Connect the chevron click to toggle the submenu
+        # Connect the chevron click to toggle the submenus
         self.hyprsunset.connect("reveal-clicked", self._toggle_hyprsunset_submenu)
+        self.bt_btn.connect("reveal-clicked", self._toggle_bluetooth_submenu)
 
         content_box.show_all()
         super().__init__(content=content_box, point_to=point_to_widget)
@@ -72,3 +74,7 @@ class QuickSettingsMenu(Popover):
     def _toggle_hyprsunset_submenu(self, *_):
         """Toggle the HyprSunset submenu visibility."""
         self.hyprsunset.submenu.toggle_reveal()
+
+    def _toggle_bluetooth_submenu(self, *_):
+        """Toggle the Bluetooth submenu visibility."""
+        self.bt_btn.submenu.toggle_reveal()
