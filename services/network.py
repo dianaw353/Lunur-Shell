@@ -396,8 +396,6 @@ class NetworkService(Service):
         # Escape special characters in password for shell
         escaped_password = password.replace("'", "'\\''")
 
-        # Use nmcli to connect with password
-        # The connection will be saved automatically by NetworkManager
         command = f"nmcli device wifi connect '{bssid}' password '{escaped_password}'"
 
         def on_complete(result: str, *args):
