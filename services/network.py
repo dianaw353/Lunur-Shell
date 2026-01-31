@@ -386,7 +386,7 @@ class NetworkService(Service):
         callback: Callable[[bool, str | None], None] | None = None,
     ):
         """Connect to a WiFi network with a password.
-        
+
         Args:
             bssid: The BSSID of the access point
             ssid: The SSID (network name) for the connection profile
@@ -395,57 +395,65 @@ class NetworkService(Service):
         """
         # Escape special characters in password for shell
         escaped_password = password.replace("'", "'\\''")
-        
+
         # Use nmcli to connect with password
         # The connection will be saved automatically by NetworkManager
         command = f"nmcli device wifi connect '{bssid}' password '{escaped_password}'"
-        
+
         def on_complete(result: str, *args):
             if callback:
                 # Check if connection was successful
-                if "successfully activated" in result.lower() or "successfully" in result.lower():
+                if (
+                    "successfully activated" in result.lower()
+                    or "successfully" in result.lower()
+                ):
                     callback(True, None)
                 else:
                     callback(False, result if result else "Connection failed")
-        
+
         exec_shell_command_async(command, on_complete)
 
     def get_saved_connections(self) -> List[str]:
         """Get list of saved WiFi connection SSIDs."""
         if not self._client:
             return []
-        
+
         saved_ssids = []
         connections = self._client.get_connections()
-        
+
         for conn in connections:
             settings = conn.get_setting_wireless()
             if settings:
                 ssid_bytes = settings.get_ssid()
                 if ssid_bytes:
-                    ssid = ssid_bytes.get_data().decode('utf-8', errors='ignore')
+                    ssid = ssid_bytes.get_data().decode("utf-8", errors="ignore")
                     saved_ssids.append(ssid)
-        
+
         return saved_ssids
 
     def has_saved_connection(self, ssid: str) -> bool:
         """Check if a WiFi network has saved credentials."""
         return ssid in self.get_saved_connections()
 
-    def forget_wifi_network(self, ssid: str, callback: Callable[[bool], None] | None = None):
+    def forget_wifi_network(
+        self, ssid: str, callback: Callable[[bool], None] | None = None
+    ):
         """Delete a saved WiFi connection profile.
-        
+
         Args:
             ssid: The SSID of the network to forget
             callback: Optional callback(success: bool)
         """
         escaped_ssid = ssid.replace("'", "'\\''")
         command = f"nmcli connection delete '{escaped_ssid}'"
-        
+
         def on_complete(result: str, *args):
             if callback:
-                callback("successfully deleted" in result.lower() or "deleted" in result.lower())
-        
+                callback(
+                    "successfully deleted" in result.lower()
+                    or "deleted" in result.lower()
+                )
+
         exec_shell_command_async(command, on_complete)
 
     @Property(str, "readable")
