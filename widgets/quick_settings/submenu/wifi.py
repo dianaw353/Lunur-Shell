@@ -29,12 +29,9 @@ gi.require_versions({"Gtk": "3.0"})
 
 class PasswordEntry(Box):
     """A password entry widget for WiFi authentication."""
-    
+
     def __init__(
-        self,
-        on_submit: Callable[[str], None],
-        on_cancel: Callable[[], None],
-        **kwargs
+        self, on_submit: Callable[[str], None], on_cancel: Callable[[], None], **kwargs
     ):
         super().__init__(
             orientation="v",
@@ -43,11 +40,11 @@ class PasswordEntry(Box):
             h_expand=True,
             **kwargs,
         )
-        
+
         self._on_submit = on_submit
         self._on_cancel = on_cancel
         self._is_visible = False
-        
+
         # Password entry field
         self.entry = Entry(
             placeholder="Enter password...",
@@ -57,7 +54,7 @@ class PasswordEntry(Box):
         )
         self.entry.connect("activate", self._handle_entry_activate)
         self.entry.connect("changed", self._on_entry_changed)
-        
+
         # Toggle password visibility button
         self.visibility_button = Button(
             style_classes=["wifi-visibility-button"],
@@ -66,7 +63,7 @@ class PasswordEntry(Box):
         )
         self._update_visibility_icon()
         self.visibility_button.connect("clicked", self._toggle_visibility)
-        
+
         # Entry row with visibility toggle
         entry_row = Box(
             orientation="h",
@@ -75,31 +72,31 @@ class PasswordEntry(Box):
             style_classes=["wifi-entry-row"],
             children=[self.entry, self.visibility_button],
         )
-        
+
         # Action buttons
         self.cancel_button = HoverButton(
             label="Cancel",
             style_classes=["wifi-auth-button", "wifi-cancel-button"],
         )
         self.cancel_button.connect("clicked", self._handle_cancel)
-        
+
         self.connect_button = HoverButton(
             label="Connect",
             style_classes=["wifi-auth-button", "wifi-connect-button"],
             sensitive=False,  # Disabled until password is entered
         )
         self.connect_button.connect("clicked", self._handle_connect)
-        
+
         button_row = Box(
             orientation="h",
             spacing=8,
             h_align="end",
             children=[self.cancel_button, self.connect_button],
         )
-        
+
         self.add(entry_row)
         self.add(button_row)
-    
+
     def _update_visibility_icon(self):
         """Update the visibility toggle button icon."""
         icon_name = (
@@ -107,11 +104,11 @@ class PasswordEntry(Box):
             if self._is_visible
             else icons["ui"].get("eye-off", "view-reveal-symbolic")
         )
-        
+
         # Clear existing children
         for child in self.visibility_button.get_children():
             self.visibility_button.remove(child)
-        
+
         self.visibility_button.add(
             Image(
                 icon_name=icon_name,
@@ -119,40 +116,40 @@ class PasswordEntry(Box):
             )
         )
         self.visibility_button.show_all()
-    
+
     def _toggle_visibility(self, *_):
         """Toggle password visibility."""
         self._is_visible = not self._is_visible
         self.entry.set_visibility(self._is_visible)
         self._update_visibility_icon()
-    
+
     def _on_entry_changed(self, entry):
         """Enable/disable connect button based on password length."""
         text = entry.get_text()
         # WPA passwords must be at least 8 characters
         self.connect_button.set_sensitive(len(text) >= 8)
-    
+
     def _handle_entry_activate(self, *_):
         """Handle Enter key press in entry."""
         if len(self.entry.get_text()) >= 8:
             self._handle_connect()
-    
+
     def _handle_connect(self, *_):
         """Handle connect button click."""
         password = self.entry.get_text()
         if password and len(password) >= 8:
             self._on_submit(password)
-    
+
     def _handle_cancel(self, *_):
         """Handle cancel button click."""
         self.clear()
         self._on_cancel()
-    
+
     def focus_entry(self):
         """Focus the password entry field."""
         self.entry.grab_focus()
         return False  # For GLib.idle_add compatibility
-    
+
     def clear(self):
         """Clear the password entry and reset state."""
         self.entry.set_text("")
@@ -164,7 +161,7 @@ class PasswordEntry(Box):
 
 class WifiNetworkBox(CenterBox):
     """A widget representing a single WiFi network in the list."""
-    
+
     def __init__(
         self,
         network: dict,
@@ -172,7 +169,7 @@ class WifiNetworkBox(CenterBox):
         network_service: NetworkService,
         is_active: bool = False,
         on_auth_required: Callable[["WifiNetworkBox"], None] | None = None,
-        **kwargs
+        **kwargs,
     ):
         super().__init__(
             spacing=2,
@@ -192,7 +189,9 @@ class WifiNetworkBox(CenterBox):
         self.on_auth_required = on_auth_required
         self._is_connecting = False
 
-        self.connect_button = HoverButton(style_classes=["submenu-button"])
+        self.connect_button = HoverButton(
+            style_classes=["wifi-auth-button", "wifi-connect-button"]
+        )
         self._setup_button_state()
 
         # Get strength icon
@@ -247,7 +246,7 @@ class WifiNetworkBox(CenterBox):
         """Handle connect button click."""
         if self._is_connecting:
             return
-        
+
         if self.is_secured:
             # Check for saved credentials
             if self.network_service.has_saved_connection(self.ssid):
@@ -264,7 +263,7 @@ class WifiNetworkBox(CenterBox):
         """Connect using saved credentials."""
         self._set_connecting_state()
         self.network_service.connect_wifi_bssid(self.bssid)
-    
+
     def _connect_open_network(self):
         """Connect to an open (unsecured) network."""
         self._set_connecting_state()
@@ -290,7 +289,7 @@ class WifiNetworkBox(CenterBox):
         """Handle the connection result callback."""
         self._is_connecting = False
         self.connect_button.set_sensitive(True)
-        
+
         if success:
             self.connect_button.set_label("Connected")
             # UI will update via wifi changed signal
@@ -346,12 +345,12 @@ class WifiSubMenu(QuickSubMenu):
             style_classes=["wifi-auth-label"],
             h_align="start",
         )
-        
+
         self.password_entry = PasswordEntry(
             on_submit=self._on_password_submitted,
             on_cancel=self._on_auth_cancelled,
         )
-        
+
         self.auth_container = Box(
             orientation="v",
             spacing=8,
@@ -359,7 +358,7 @@ class WifiSubMenu(QuickSubMenu):
             h_expand=True,
             children=[self.auth_label, self.password_entry],
         )
-        
+
         self.auth_revealer = Revealer(
             transition_type="slide-down",
             transition_duration=200,
@@ -369,8 +368,7 @@ class WifiSubMenu(QuickSubMenu):
 
         # Connected network container
         self.connected_network_listbox = ListBox(
-            visible=True, 
-            name="connected-network-listbox"
+            visible=True, name="connected-network-listbox"
         )
         self.connected_network_container = Box(
             orientation="v",
@@ -388,8 +386,7 @@ class WifiSubMenu(QuickSubMenu):
 
         # Available networks container
         self.available_networks_listbox = ListBox(
-            visible=True, 
-            name="available-networks-listbox"
+            visible=True, name="available-networks-listbox"
         )
         self.available_networks_container = Box(
             orientation="v",
@@ -483,7 +480,7 @@ class WifiSubMenu(QuickSubMenu):
         """Handle WiFi enabled/disabled changes."""
         self._update_header_state()
         self._populate_networks()
-        
+
         # Hide auth dialog when WiFi is disabled
         if self.wifi and not self.wifi.enabled:
             self._hide_auth_dialog()
@@ -506,10 +503,10 @@ class WifiSubMenu(QuickSubMenu):
     def _show_auth_dialog(self, network_box: WifiNetworkBox):
         """Show the authentication dialog for a network."""
         self._current_auth_network = network_box
-        self.auth_label.set_label(f"Enter password for \"{network_box.ssid}\"")
+        self.auth_label.set_label(f'Enter password for "{network_box.ssid}"')
         self.password_entry.clear()
         self.auth_revealer.set_reveal_child(True)
-        
+
         # Focus entry after animation
         GLib.timeout_add(250, self.password_entry.focus_entry)
 
@@ -517,7 +514,7 @@ class WifiSubMenu(QuickSubMenu):
         """Hide the authentication dialog."""
         self.auth_revealer.set_reveal_child(False)
         self.password_entry.clear()
-        
+
         if self._current_auth_network:
             self._current_auth_network.reset_state()
             self._current_auth_network = None
@@ -541,11 +538,14 @@ class WifiSubMenu(QuickSubMenu):
         """Populate the network lists."""
         # Don't dismiss auth dialog if it's currently shown
         # Only hide if we're not in the middle of authentication
-        auth_in_progress = self.auth_revealer.get_reveal_child() and self._current_auth_network is not None
-    
+        auth_in_progress = (
+            self.auth_revealer.get_reveal_child()
+            and self._current_auth_network is not None
+        )
+
         if not auth_in_progress:
             self._hide_auth_dialog()
-    
+
         # Clear existing rows
         self._clear_listbox(self.connected_network_listbox)
         self._clear_listbox(self.available_networks_listbox)
@@ -571,9 +571,7 @@ class WifiSubMenu(QuickSubMenu):
 
         # Sort by strength (strongest first)
         sorted_aps = sorted(
-            access_points, 
-            key=lambda x: x.get("strength", 0), 
-            reverse=True
+            access_points, key=lambda x: x.get("strength", 0), reverse=True
         )
 
         seen_ssids: set[str] = set()
