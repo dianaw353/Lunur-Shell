@@ -46,7 +46,9 @@ class BluetoothDeviceBox(CenterBox):
             "bluetooth": text_icons["bluetooth"]["on"],
         }
 
-        self.connect_button = HoverButton(style_classes=["submenu-button"])
+        self.connect_button = HoverButton(
+            style_classes=["wifi-auth-button", "wifi-connect-button"]
+        )
         self.connect_button.connect(
             "clicked",
             lambda _: self.device.set_property("connecting", not self.device.connected),
